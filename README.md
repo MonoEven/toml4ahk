@@ -325,6 +325,12 @@ Output:
 
 All tests are in the folder "toml\test".
 
+```autohotkey
+#Include <toml\test\Alltest>
+
+testAll()
+```
+
 ### Limitations
 
 Float value may not precisely.
