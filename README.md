@@ -8,7 +8,8 @@ Reference, see the [toml4j](https://github.com/mwanji/toml4j/tree/wip).
 
 You should place folder "java" with "base.ahk" & all in folder "toml" under your lib folder.
 
-use ```autohotkey
+use
+```autohotkey
 #Include <toml\toml>
 ```
 to include the lib.
