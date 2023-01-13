@@ -1,0 +1,8 @@
+{
+    "albums": {
+       "songs": { "type": "array", "value": [
+               {"name": {"type": "string", "value": "Glory Days"}}
+           ]
+       }
+    }
+}

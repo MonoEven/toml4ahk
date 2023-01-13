@@ -1,0 +1,7 @@
+[a]
+better = 43
+
+[a.b]
+
+[a.b.c]
+answer = 42
