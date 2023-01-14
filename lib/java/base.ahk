@@ -274,6 +274,11 @@ class ArrayList
         return this.arr.length == 0
     }
     
+    toahk()
+    {
+        return monoExtra.deepAhkType(this.arr)
+    }
+    
     toArray(a := [])
     {
         for i in this.arr
@@ -281,9 +286,17 @@ class ArrayList
         return a
     }
     
-    toahk()
+    toString()
     {
-        return monoExtra.deepAhkType(this.arr)
+        if this.arr.length < 1
+            return "[]"
+        plus := ""
+        text := "[" . monoExtra.toString(this.arr[1])
+        loop this.arr.length - 1
+            plus .= "," . monoExtra.toString(this.arr[a_index + 1])
+        text .= plus
+        text .= "]"
+        return text
     }
     
     size()
@@ -297,6 +310,152 @@ class Arrays
     static asList(args*)
     {
         return ArrayList(args*)
+    }
+    
+    static binarySearch(arrayset, low, high, target, prop := Java.Null(), special := Java.Null())
+    {
+        if arrayset is ArrayList
+            arrayset := arrayset.arr
+        if !arrayset.length || low >= high
+            return -1
+        propFlag := prop is string ? true : false
+        specialFlag := special is Java.Null ? false : true
+        specialFunc := specialFlag ? special == "ord" ? ord : (self) => self : (self) => self
+        if !propFlag
+        {
+            while (low <= high)
+            {
+                middle := (low + high) // 2
+                try
+                    middle_value := arrayset[middle + 1]
+                catch
+                    return -1
+                if (specialFunc(target) == specialFunc(middle_value))
+                    return middle
+                else if (specialFunc(target) > specialFunc(middle_value))
+                    low := middle + 1
+                else if (specialFunc(target) < specialFunc(middle_value))
+                    high := middle - 1
+            }
+        }
+        else
+        {
+            while (low <= high)
+            {
+                middle := (low + high) // 2
+                try
+                    middle_value := arrayset[middle + 1].%prop%
+                catch
+                    return -1
+                if (specialFunc(target.%prop%) == specialFunc(middle_value))
+                    return middle
+                else if (specialFunc(target.%prop%) > specialFunc(middle_value))
+                    low := middle + 1
+                else if (specialFunc(target.%prop%) < specialFunc(middle_value))
+                    high := middle - 1
+            }
+        }
+        return -1
+    }
+    
+    static sort(arrayset, low, high, prop := Java.Null(), special := Java.Null())
+    {
+        if arrayset is ArrayList
+            arrayset := arrayset.arr
+        propFlag := prop is string ? true : false
+        specialFlag := special is Java.Null ? false : true
+        specialFunc := specialFlag ? special == "ord" ? ord : (self) => self : (self) => self
+        if !propFlag
+        {
+            j := 0
+            n := low
+            flag := 0
+            k := high - 1
+            i := low
+            while i < high - 1
+            {
+                pos := low
+                flag := 0
+                j := n
+                while j < k
+                {
+                    if (specialFunc(arrayset[j + 1]) > specialFunc(arrayset[j + 2]))
+                    {
+                        Arrays.swap(arrayset, j, j + 1)
+                        flag := 1
+                        pos := j
+                    }
+                    j++
+                }
+                if (flag == 0)
+                    return
+                k := pos
+                j := k
+                while j > n
+                {
+                    if (specialFunc(arrayset[j]) > specialFunc(arrayset[j + 1]))
+                    {
+                        Arrays.swap(arrayset, j - 1, j)
+                        flag := 1
+                    }
+                    j--
+                }
+                n++
+                if (flag == 0)
+                    return
+                i++
+            }
+        }
+        else
+        {
+            j := 0
+            n := low
+            flag := 0
+            k := high - 1
+            i := low
+            while i < high - 1
+            {
+                pos := low
+                flag := 0
+                j := n
+                while j < k
+                {
+                    if (specialFunc(arrayset[j + 1].%prop%) > specialFunc(arrayset[j + 2].%prop%))
+                    {
+                        Arrays.swap(arrayset, j, j + 1)
+                        flag := 1
+                        pos := j
+                    }
+                    j++
+                }
+                if (flag == 0)
+                    return
+                k := pos
+                j := k
+                while j > n
+                {
+                    if (specialFunc(arrayset[j].%prop%) > specialFunc(arrayset[j + 1].%prop%))
+                    {
+                        Arrays.swap(arrayset, j - 1, j)
+                        flag := 1
+                    }
+                    j--
+                }
+                n++
+                if (flag == 0)
+                    return
+                i++
+            }
+        }
+    }
+    
+    static swap(arrayset, index1, index2)
+    {
+        if arrayset is ArrayList
+            arrayset := arrayset.arr
+        tmp := arrayset[index1 + 1]
+        arrayset[index1 + 1] := arrayset[index2 + 1]
+        arrayset[index2 + 1] := tmp
     }
 }
 
@@ -378,6 +537,16 @@ class Collections
     static emptyList()
     {
         return ArrayList()
+    }
+    
+    static reverse(list)
+    {
+        if list is ArrayList
+            list := list.arr
+        tmp := list.clone()
+        length := list.length
+        loop length
+            list[a_index] := tmp[length - a_index + 1]
     }
 }
 
@@ -1301,6 +1470,11 @@ class HashMap extends Map
     }
 }
 
+class IOException extends Error
+{
+    
+}
+
 class Java
 {
     static file(filename)
@@ -1672,17 +1846,23 @@ class Matcher
     {
         this.outer := outer
         this.input := input
+        this.regex := Java.Null()
+        this._start := 0
+        this._end := 0
         this.name := ""
     }
     
     find()
     {
+        if !(this.regex is Java.Null)
+            this._start += this.regex.pos + this.regex.len - 1
         flag := !regexmatch(this.input, this.outer.regex, &regex)
         this.regex := regex
         if !flag
         {
             group_count := this.regex.count
             this.input := substr(this.input, this.regex.pos[group_count] + this.regex.len[group_count])
+            this._end += this.regex.pos + this.regex.len - 1
         }
         return !flag
     }
@@ -1702,6 +1882,16 @@ class Matcher
     matches()
     {
         return this.find()
+    }
+    
+    start()
+    {
+        return this._start
+    }
+    
+    end()
+    {
+        return this._end
     }
 }
 
@@ -2136,5 +2326,14 @@ class monoExtra
         s := strreplace(s, "\b", "`b")
         s := strreplace(s, "\f", "`f")
         return s
+    }
+    
+    static toString(obj)
+    {
+        if obj.hasmethod("toString")
+            return obj.toString()
+        else if obj is number || obj is string
+            return obj
+        return format("{type: {}}", type(obj))
     }
 }
